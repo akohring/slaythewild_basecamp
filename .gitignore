@@ -3,6 +3,7 @@
 *.dll
 *.so
 *.dylib
+slaythewild_basecamp
 
 # Test binary, build with `go test -c`
 *.test

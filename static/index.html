@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>SlayTheWild Basecamp</title>
+        <script src="/js/jquery.min.js"></script>
+        <script src="/js/qrcode.min.js"></script>
+        <script type="text/javascript">
+            function generate_qrcode() {
+                var qrcode = document.getElementById("qrcode");
+                qrcode.innerHTML = "";
+                new QRCode(document.getElementById("qrcode"), {
+                    text: document.getElementById("image").src,
+                    width: 480,
+                    height: 480,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+                qrcode.style.display = "block";
+                document.getElementById("image").style.display = "none";
+            }
+
+            function show_image_div() {
+                document.getElementById("qrcode").style.display = "none";
+                document.getElementById("image").style.display = "block";
+            }
+
+            function get_image(position) {
+                $.ajax({
+                    url: "/image/"+position,
+                    type: "get",
+                    data: {
+                        current_image: $("#image").attr('src')
+                    },
+                    success: function (data) {
+                        show_image_div();
+                        change_image(data);
+                    }
+                });
+            }
+
+            function change_image(data) {
+                $("#image").attr("src", data.url);
+                $("#datetime").html(data.datetime);
+            }
+
+            $(function() {
+                var conn = new WebSocket("ws://" + document.location.host + "/ws");
+                conn.onmessage = function (data) {
+                    change_image(data);
+                };
+            });
+        </script>
+    </head>
+    <body>
+        <div align="center">
+            <img id="image" alt="No images available" style="cursor: pointer;" onclick="generate_qrcode();">
+        </div>
+        <div id="qrcode" align="center" style="cursor: pointer;" onclick="show_image_div();"></div>
+        <div id="datetime" align="center"></div>
+        <div align="center">
+            <button type="button" onclick="get_image('first');"><< First</button>
+            <button type="button" onclick="get_image('previous');">< Previous</button>
+            <button type="button" onclick="get_image('next');">Next ></button>
+            <button type="button" onclick="get_image('last');">Last >></button>
+        </div>
+    </body>
+</html>
