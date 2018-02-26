@@ -36,6 +36,11 @@ func First(directory string) (Image, error) {
 	return getFileByIndex(directory, 0)
 }
 
+// Last image within a directory
+func Last(directory string) (Image, error) {
+	return getFileByIndex(directory, -1)
+}
+
 func newImage(directory string, fileName string) Image {
 	file := filepath.Join(directory, fileName)
 	url := "/image/"+fileName
@@ -55,5 +60,11 @@ func getFileByIndex(directory string, index int) (Image, error) {
 	sort.Slice(files, func(i,j int) bool{
 		return files[i].Name() < files[j].Name()
 	})
-	return newImage(directory, files[index].Name()), nil
+	var file os.FileInfo
+	if index < 0 {
+		file = files[len(files) + index]
+	} else {
+		file = files[index]
+	}
+	return newImage(directory, file.Name()), nil
 }
