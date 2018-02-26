@@ -33,12 +33,22 @@ func Write(directory string, bytes []byte) Image {
 
 // First image within a directory
 func First(directory string) (Image, error) {
-	return getFileByIndex(directory, 0)
+	return getImageByIndex(directory, 0)
 }
 
 // Last image within a directory
 func Last(directory string) (Image, error) {
-	return getFileByIndex(directory, -1)
+	return getImageByIndex(directory, -1)
+}
+
+// Next image within a directory
+func Next(directory string, currentImage string) (Image, error) {
+	return getAdjacentImage(directory, currentImage, 1)
+}
+
+// Previous image within a directory
+func Previous(directory string, currentImage string) (Image, error) {
+	return getAdjacentImage(directory, currentImage, -1)
 }
 
 func newImage(directory string, fileName string) Image {
@@ -49,17 +59,11 @@ func newImage(directory string, fileName string) Image {
 	return Image{directory: directory, file: file, url: url, displayTime: displayTime}
 }
 
-func getFileByIndex(directory string, index int) (Image, error) {
-	files, err := ioutil.ReadDir(directory)
-	if err != nil {
-       return Image{}, err
+func getImageByIndex(directory string, index int) (Image, error) {
+	files, err := getSortedFiles(directory)
+	if(err != nil) {
+		return Image{}, err
 	}
-	if(len(files) == 0) {
-		return Image{}, fmt.Errorf("Image directory is empty; imageDir=%s", directory)
-	}
-	sort.Slice(files, func(i,j int) bool{
-		return files[i].Name() < files[j].Name()
-	})
 	var file os.FileInfo
 	if index < 0 {
 		file = files[len(files) + index]
@@ -67,4 +71,43 @@ func getFileByIndex(directory string, index int) (Image, error) {
 		file = files[index]
 	}
 	return newImage(directory, file.Name()), nil
+}
+
+func getAdjacentImage(directory string, currentImage string, offset int) (Image, error) {
+	files, err := getSortedFiles(directory)
+	if(err != nil) {
+		return Image{}, err
+	}
+	index, err := getIndexByFile(files, currentImage)
+	if(err != nil) {
+		return Image{}, err
+	}
+	adjacentIndex := index + offset
+	if(adjacentIndex == len(files)) {
+		adjacentIndex = 0
+	}
+	return getImageByIndex(directory, adjacentIndex)
+}
+
+func getIndexByFile(files []os.FileInfo, fileName string) (int, error) {
+	for index, file := range files {
+		if(file.Name() == fileName) {
+			return index, nil
+		}
+	}
+	return -1, fmt.Errorf("File not found; fileName=%s", fileName)
+}
+
+func getSortedFiles(directory string) ([]os.FileInfo, error) {
+	files, err := ioutil.ReadDir(directory)
+	if err != nil {
+       return files, err
+	}
+	if(len(files) == 0) {
+		return files, fmt.Errorf("Image directory is empty; imageDir=%s", directory)
+	}
+	sort.Slice(files, func(i,j int) bool{
+		return files[i].Name() < files[j].Name()
+	})
+	return files, err
 }
