@@ -13,8 +13,8 @@ import (
 type Image struct {
 	directory string
 	file string
-	url string
-	displayTime string
+	URL string `json:"url"`
+	DisplayTime string `json:"datetime"`
 }
 
 const (
@@ -56,7 +56,7 @@ func newImage(directory string, fileName string) Image {
 	url := "/image/"+fileName
 	t, _ := time.Parse(time.RFC3339, fileName[0:len(fileName)-len(fileExtension)])
 	displayTime := t.Format("Mon Jan 02 2006 03:04:05 PM")
-	return Image{directory: directory, file: file, url: url, displayTime: displayTime}
+	return Image{directory: directory, file: file, URL: url, DisplayTime: displayTime}
 }
 
 func getImageByIndex(directory string, index int) (Image, error) {
